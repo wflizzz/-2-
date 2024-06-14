@@ -1,0 +1,65 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+void writeToFile(const char* fileName, const char* data) { //Объявление ф-ции врайттуфайл которая принимает имя файла и данные для записи 
+    ofstream file(fileName);//открытие файла для записи
+    if (file.is_open()) { // проверка успешного открытия файла
+        file << data; //запись данный в файл 
+        file.close(); //закрытие файла после записи 
+    }
+    else {
+        cout << "Невозможно открыть файл для записи." << endl;
+    }
+}
+
+void readFromFile(const char* fileName) { // объявление функции readFromFile, которая принимает имя файла для чтения.
+
+    ifstream file(fileName); //открытие файла для чтения 
+    if (file.is_open()) { //проверка на успешное открытие 
+        string line;// объявление переменной для хранения строки из файла
+        int min = INT_MAX;// инициализация переменной мин как максимального значения типа инт
+        int number = -1;
+        int count = 0;
+        int k = INT_MAX;
+
+        while (file >> line) {// цикл чтения строк из файла
+            count++; // увеличение счетчика слов
+            int q = 0; // инициализация переменной как 0 для подсчета символов в слове
+            for (char c : line) { // цикл подсчета символов в текущем слове 
+                if (c != ' ') {
+                    q++;
+                }
+            }
+
+            if (q < min) { // цикл для проверки явл ли текущее слово минимальным по кол-ву символов и обновление соответствующих переменных
+                min = q;
+                number = count;
+                k = q;
+            }
+        }
+
+        cout << "Номер самого короткого слова: " << number << endl;
+        cout << "Количество символов в минимальном слове: " << k << endl;
+
+        file.close();
+    }
+    else {
+        cout << "Невозможно открыть файл для чтения." << endl;
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    const char* fileName = "data.txt"; 
+    char input[100];
+
+    cout << "Введите строку слов: ";
+    cin.getline(input, sizeof(input)); // считывание строки слов с клавиатуры
+
+    writeToFile(fileName, input); //вызов ф-ции для записи введенной строки в файл
+
+    readFromFile(fileName); // вызов ф-ции для чтения данных их файла и обработки минимального слова
+
+    return 0;
+}
