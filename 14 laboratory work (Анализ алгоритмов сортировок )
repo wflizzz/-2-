@@ -1,0 +1,102 @@
+#include <iostream> // Подключение стандартной библиотеки ввода-вывода
+#include <ctime> // Подключение библиотеки для работы со временем
+#include <cstdlib> // Подключение стандартной библиотеки для функций общего назначения
+#include <chrono> // Подключение библиотеки для работы с временем выполнения
+#include <algorithm> // Подключение библиотеки с алгоритмами
+
+using namespace std; // Использование пространства имен std
+using namespace std::chrono; // Использование пространства имен std::chrono
+
+// Функция для генерации случайных чисел в заданном диапазоне
+int getRandomNumber(int min, int max) {
+    return rand() % (max - min + 1) + min;
+}
+
+// Функция для заполнения массива случайными числами
+void fillArray(int A[], int size) {
+    for (int i = 0; i < size; ++i) {
+        A[i] = getRandomNumber(1, 100); // Генерируем случайные числа от 1 до 100
+    }
+}
+
+// Функция для вывода массива на экран
+void printArray(int A[], int size) {
+    for (int i = 0; i < size; ++i) {
+        cout << A[i] << " ";
+    }
+    cout << endl;
+}
+
+// Функция сортировки пузырьком
+void bubbleSort(int a[], int n) {//Определение функции сортировки пузырьком. Принимает массив a для сортировки и его размер n.
+    for (int i = 0; i < n - 1; ++i) { //цикл проходит по массиву a от начала до предпоследнего элемента.
+        for (int j = 0; j < n - i - 1; ++j) { //вложенный цикл проходит по массиву от начала до элемента n - i - 2. -1 потому что массивы в C++ индексируются с нуля.
+            if (a[j] > a[j + 1]) { //Проверяет, является ли текущий элемент больше следующего элемента.
+                swap(a[j], a[j + 1]); //Если текущий элемент больше следующего, они меняются местами с помощью функции swap.
+            }
+        }
+    }
+}
+
+// Функция для определения границы Хоара
+int getHoarBorder(int A[], int sm, int em) {//Определение функции getHoarBorder, которая вычисляет границу Хоара для массива A в заданном диапазоне от sm до em.
+    int i = sm - 1, j = em + 1;//Инициализация переменных i и j для двух указателей, которые будут идти навстречу друг другу.
+    int brd = A[sm], buf;//Определение опорного элемента brd равным первому элементу в массиве, а также переменной buf для временного хранения значений при обмене.
+    while (i < j) { //Цикл, который продолжается до тех пор, пока i не превысит j.
+        while (A[--j] > brd);//Уменьшение j до тех пор, пока значение элемента слева от brd больше brd
+        while (A[++i] < brd);//Увеличение i до тех пор, пока значение элемента справа от brd меньше brd.
+        if (i < j) { //Если i меньше j, меняем местами элементы с индексами i и j.
+            swap(A[i], A[j]);
+        }
+    }
+    return j;
+}
+
+// Функция для быстрой сортировки Хоара
+void quickSort(int A[], int sm, int em) {
+    if (sm < em) {
+        int hb = getHoarBorder(A, sm, em);
+        quickSort(A, sm, hb);
+        quickSort(A, hb + 1, em);
+    }
+}
+
+int main() {
+    srand(time(0)); // Инициализация генератора случайных чисел
+
+    const int sizes[] = { 1000, 2000, 3000, 4000, 5000 }; // Размеры массивов
+    const int numSizes = sizeof(sizes) / sizeof(sizes[0]);
+
+    for (int i = 0; i < numSizes; ++i) {
+        int size = sizes[i];
+        int* A = new int[size];
+        fillArray(A, size); // Заполнение массива случайными числами
+
+        // Копирование нечетных элементов из массива A в массив B
+        int* B = new int[size];
+        int idxB = 0;
+        for (int idxA = 0; idxA < size; ++idxA) {
+            if (idxA % 2 == 1 && A[idxA] % 2 == 1) {
+                B[idxB++] = A[idxA];
+            }
+        }
+        // Сортировка массива B пузырьком и замер времени
+        auto start = high_resolution_clock::now();
+        bubbleSort(B, idxB);
+        auto stop = high_resolution_clock::now();
+        auto duration = duration_cast<microseconds>(stop - start);
+        cout << "Bubble Sort time for array of size " << size << ": " << duration.count() << " microseconds" << endl;
+
+        // Сортировка массива B сортировкой Хоара и замер времени
+        start = high_resolution_clock::now();
+        quickSort(B, 0, idxB - 1);
+        stop = high_resolution_clock::now();
+        duration = duration_cast<microseconds>(stop - start);
+        cout << "Quick Sort time for array of size " << size << ": " << duration.count() << " microseconds" << endl;
+
+        delete[] A;
+        delete[] B;
+    }
+
+    return 0;
+}
