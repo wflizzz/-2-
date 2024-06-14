@@ -1,0 +1,270 @@
+#include <iostream>
+#include <fstream>
+using namespace std;
+
+struct list
+{
+    float number;
+    list* next;
+};
+
+void insert(list*& p, float value);   // функция добавления элемента в список
+float del(list*& p, float value);     // функция удаления элемента из списка
+list* search(list* p, float value);   // функция поиска элемента в списке
+int IsEmpty(list* p);                  // функция, проверяющая пуст ли список
+void printList(list* p);               // функция вывода списка
+void writeToConsole(list* p);          // функция записи списка в консольное окно
+void writeToFile(list* p);             // функция записи списка в файл
+list* readFromFile();                  // функция считывания списка из файла
+void menu(void);                       // функция, показывающая меню
+float findAverageNegative(list* p);    // функция поиска среднего значения отрицательных элементов
+
+int main()
+{
+    setlocale(LC_CTYPE, "Russian");    // устанавливаем русский язык для вывода
+    list* first = NULL;                 // указатель на начало списка, инициализирован пустым значением
+    int choice;                         // переменная для выбора пользователя
+    float value;                        // переменная для ввода/удаления числа
+    menu();                             // выводим меню
+    cout << " ? ";
+    cin >> choice;                      // ввод выбора пользователя
+    while (choice != 8)                 // цикл работы с программой, пока пользователь не выберет выход
+    {
+        switch (choice)                 // переключатель для выполнения действий в зависимости от выбора пользователя
+        {
+        case 1:                         // добавление числа в список
+            cout << "Введите число для добавления: ";
+            cin >> value;
+            insert(first, value);
+            writeToConsole(first);
+            break;
+        case 2:                         // удаление числа из списка
+            if (!IsEmpty(first))
+            {
+                cout << "Введите удаляемое число: ";
+                cin >> value;
+                if (del(first, value))
+                {
+                    cout << "Удалено число " << value << endl;
+                    writeToConsole(first);
+                }
+                else
+                    cout << "Число не найдено" << endl;
+            }
+            else
+                cout << "Список пуст" << endl;
+            break;
+        case 3:                         // поиск элемента в списке
+            if (!IsEmpty(first))
+            {
+                cout << "Введите число для поиска: ";
+                cin >> value;
+                list* found = search(first, value);
+                if (found)
+                    cout << "Число найдено" << endl;
+                else
+                    cout << "Число не найдено" << endl;
+            }
+            else
+                cout << "Список пуст" << endl;
+            break;
+        case 4:                         // вывод списка в консольное окно
+            writeToConsole(first);
+            break;
+        case 5:                         // запись списка в файл
+            writeToFile(first);
+            break;
+        case 6:                         // считывание списка из файла
+            first = readFromFile();
+            break;
+        case 7:                         // поиск среднего значения отрицательных элементов
+            if (!IsEmpty(first))
+            {
+                float average = findAverageNegative(first);
+                if (average != 0)
+                    cout << "Среднее значение отрицательных элементов: " << average << endl;
+                else
+                    cout << "Отрицательные элементы отсутствуют" << endl;
+            }
+            else
+                cout << "Список пуст" << endl;
+            break;
+        default:
+            cout << "Неправильный выбор" << endl;
+            menu();
+            break;
+        }
+        cout << "?  ";
+        cin >> choice;                    // ввод нового выбора пользователя
+    }
+    cout << "Конец" << endl;              // выводим сообщение о завершении программы
+    return 0;
+}
+
+void menu(void)  //Вывод меню 
+{
+    cout << "Сделайте выбор:" << endl;
+    cout << " 1 - Добавление элемента" << endl;
+    cout << " 2 - Удаление элемента" << endl;
+    cout << " 3 - Поиск элемента" << endl;
+    cout << " 4 - Вывод списка в консольное окно" << endl;
+    cout << " 5 - Запись списка в файл" << endl;
+    cout << " 6 - Считывание списка из файла" << endl;
+    cout << " 7 - Поиск среднего значения отрицательных элементов" << endl;
+    cout << " 8 - Выход" << endl;
+}
+
+void insert(list*& p, float value) //Добавление числа value в список 
+{
+    list* newP = new list;
+    if (newP != NULL)     // есть ли место?  
+    {
+        newP->number = value;
+        newP->next = p;
+        p = newP;
+    }
+    else
+        cout << "Операция добавления не выполнена" << endl;
+}
+
+float del(list*& p, float value)  // Удаление числа 
+{
+    list* previous, * current, * temp;
+    if (value == p->number)
+    {
+        temp = p;
+        p = p->next;    // отсоединить узел 
+        delete temp;      // освободить отсоединенный узел 
+        return value;
+    }
+    else
+    {
+        previous = p;
+        current = p->next;
+        while (current != NULL && current->number != value)
+        {
+            previous = current;
+            current = current->next; // перейти к следующему 
+        }
+        if (current != NULL)
+        {
+            temp = current;
+            previous->next = current->next;
+            delete(temp);
+            return value;
+        }
+    }
+    return 0;
+}
+
+list* search(list* p, float value) // Поиск элемента 
+{
+    while (p != NULL)
+    {
+        if (p->number == value)
+            return p;
+        p = p->next;
+    }
+    return NULL;
+}
+
+int IsEmpty(list* p) //Список  пустой? (1-да, 0-нет) 
+{
+    return p == NULL;
+}
+
+void printList(list* p)  //Вывод списка 
+{
+    if (p == NULL)
+        cout << "Список пуст" << endl;
+    else
+    {
+        cout << "Список:" << endl;
+        while (p != NULL)
+        {
+            cout << "-->" << p->number;
+            p = p->next;
+        }
+        cout << "-->NULL" << endl;
+    }
+}
+
+void writeToConsole(list* p)  //Запись списка в консольное окно
+{
+    printList(p);
+}
+
+void writeToFile(list* p)   //Запись списка в файл
+{
+    ofstream outFile("list.txt");
+    if (!outFile)
+    {
+        cout << "Ошибка открытия файла" << endl;
+        return;
+    }
+
+    while (p != NULL)
+    {
+        outFile << p->number << " ";
+        p = p->next;
+    }
+
+    outFile.close();
+    cout << "Список записан в файл list.txt" << endl;
+}
+
+list* readFromFile()  //Считывание списка из файла
+{
+    ifstream inFile("list.txt");
+    if (!inFile)
+    {
+        cout << "Ошибка открытия файла" << endl;
+        return NULL;
+    }
+
+    list* first = NULL;
+    float value;
+    while (inFile >> value)
+    {
+        insert(first, value);
+    }
+
+    inFile.close();
+    cout << "Список считан из файла list.txt" << endl;
+    return first;
+}
+
+float findAverageNegative(list* p) // Поиск среднего значения отрицательных элементов
+{
+    float sum = 0; // Сумма отрицательных элементов
+    int count = 0; // Количество отрицательных элементов
+
+    // Проходим по списку
+    while (p != NULL)
+    {
+        // Если текущий элемент отрицателен
+        if (p->number < 0)
+        {
+            // Добавляем его значение к сумме
+            sum += p->number;
+            // Увеличиваем счетчик отрицательных элементов
+            count++;
+        }
+        // Переходим к следующему элементу списка
+        p = p->next;
+    }
+
+    // Если есть отрицательные элементы
+    if (count > 0)
+    {
+        // Вычисляем среднее значение
+        float average = sum / count;
+        // Возвращаем среднее значение
+        return average;
+    }
+    else
+    {
+        // Если нет отрицательных элементов, возвращаем 0
+        return 0;
+    }
+}
