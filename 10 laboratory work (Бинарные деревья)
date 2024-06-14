@@ -1,0 +1,207 @@
+#include <iostream>
+#include <fstream> 
+#include <string>
+using namespace std;
+
+// Структура для хранения информации о сотруднике
+struct Employee {
+    string surname; // Фамилия сотрудника
+    int employeeID; // Табельный номер сотрудника
+    int hoursWorked; // Количество отработанных часов
+    double hourlyRate; // Почасовой тариф сотрудника
+
+    // Конструкторы по умолчанию и с параметрами для инициализации полей структуры
+    Employee() {}
+    Employee(string sn, int id, int hw, double hr) : surname(sn), employeeID(id), hoursWorked(hw), hourlyRate(hr) {}
+};
+
+// Узел бинарного дерева
+struct Node {
+    Employee data; // Данные о сотруднике
+    Node* left; // Указатель на левого потомка
+    Node* right; // Указатель на правого потомка
+
+    // Конструктор с параметрами для инициализации данных узла и его потомков
+    Node(Employee emp) : data(emp), left(nullptr), right(nullptr) {}
+};
+
+// Функция для добавления сотрудника в бинарное дерево поиска
+void insert(Node*& root, const Employee& emp) { // Объявление функции insert, которая добавляет нового сотрудника в бинарное дерево поиска (ссылка на указатель, это константная ссылка на объект типа Employee, который нужно добавить в дерево)
+    if (!root) { // Если узел пустой, создаем новый узел и делаем его корнем
+        root = new Node(emp); 
+        return;
+    }
+    if (emp.employeeID < root->data.employeeID) // Если табельный номер нового сотрудника меньше, чем у текущего узла, идем влево
+        insert(root->left, emp);
+    else // Иначе идем вправо
+        insert(root->right, emp);
+}
+
+// Функция для поиска сотрудника по табельному номеру
+Employee* search(Node* root, int employeeID) {
+    if (!root || root->data.employeeID == employeeID) // Если узел пуст или табельный номер совпадает с искомым, возвращаем данные или nullptr
+        return root ? &root->data : nullptr; //Тернарное условие. Если root не равен nullptr, то возвращается адрес данных сотрудника (&root->data), иначе возвращается нулевой указатель (nullptr).
+    if (employeeID < root->data.employeeID) // Если искомый табельный номер меньше, идем влево
+        return search(root->left, employeeID);
+    else // Иначе идем вправо
+        return search(root->right, employeeID);
+}
+
+// Функция для удаления сотрудника из бинарного дерева поиска
+Node* deleteEmployee(Node* root, int employeeID) {
+    // Проверяем, является ли корень пустым
+    if (!root)
+        return root; // Если корень пуст, возвращаем его
+
+    // Если табельный номер сотрудника меньше, чем табельный номер в корне, идем в левое поддерево
+    if (employeeID < root->data.employeeID)
+        root->left = deleteEmployee(root->left, employeeID);
+    // Если табельный номер сотрудника больше, чем табельный номер в корне, идем в правое поддерево
+    else if (employeeID > root->data.employeeID)
+        root->right = deleteEmployee(root->right, employeeID);
+    // Если найден узел с табельным номером, который нужно удалить
+    else {
+        // Если у узла нет левого потомка
+        if (!root->left) {
+            // Указываем правого потомка как новый корень
+            Node* temp = root->right;
+            // Удаляем текущий корень
+            delete root;
+            // Возвращаем новый корень
+            return temp;
+        }
+        // Если у узла нет правого потомка
+        else if (!root->right) {
+            // Указываем левого потомка как новый корень
+            Node* temp = root->left;
+            // Удаляем текущий корень
+            delete root;
+            // Возвращаем новый корень
+            return temp;
+        }
+        // Если у узла есть оба потомка
+        // Находим наименьший узел в правом поддереве (следующий за удаляемым узлом)
+        Node* temp = root->right;
+        while (temp->left)
+            temp = temp->left;
+        // Копируем данные из найденного узла в текущий узел
+        root->data = temp->data;
+        // Удаляем найденный узел из правого поддерева
+        root->right = deleteEmployee(root->right, temp->data.employeeID);
+    }
+    // Возвращаем корень дерева после удаления
+    return root;
+}
+
+// Функция для вывода информации о сотруднике
+void printEmployeeInfo(const Employee* emp) {
+    if (!emp) //Если пусто
+        cout << "Сотрудник не найден." << endl;
+    else {
+        cout << "Фамилия: " << emp->surname << endl;
+        cout << "Табельный номер: " << emp->employeeID << endl;
+        cout << "Отработанные часы: " << emp->hoursWorked << endl;
+        cout << "Почасовой тариф: " << emp->hourlyRate << endl;
+        // Вычисляем заработную плату сотрудника, умножая количество отработанных часов на почасовой тариф
+        double salary = emp->hoursWorked * emp->hourlyRate;
+        // Вычисляем сумму подоходного налога, которая составляет 12% от заработной платы
+        double tax = salary * 0.12;
+        cout << "Заработная плата после вычета налога: " << salary - tax << endl;
+    }
+}
+
+// Функция для записи информации о сотруднике в файл
+void writeToFile(Node* root, ofstream& outFile) {
+    if (!root)
+        return;
+    writeToFile(root->left, outFile);
+    // Записываем информацию о сотруднике в файл в формате: "фамилия табельный_номер количество_отработанных_часов почасовой_тариф"
+    outFile << root->data.surname << " " << root->data.employeeID << " " << root->data.hoursWorked << " " << root->data.hourlyRate << endl;
+    writeToFile(root->right, outFile);
+}
+
+// Функция для отображения меню и возврата выбранного пункта
+int menu() {
+    int choice;
+    cout << "\nМеню:" << endl;
+    cout << "1. Добавить сотрудника" << endl;
+    cout << "2. Найти сотрудника" << endl;
+    cout << "3. Удалить сотрудника" << endl;
+    cout << "4. Вывести информацию о сотруднике" << endl;
+    cout << "5. Записать информацию о сотрудниках в файл" << endl;
+    cout << "6. Выход" << endl;
+    cout << "Введите номер выбранного пункта: ";
+    cin >> choice;
+    return choice;
+}
+
+int main() {
+    setlocale(LC_ALL, "Ru");
+
+    Node* root = nullptr;
+    bool running = true;
+
+    while (running) {
+        int choice = menu();
+        cin.ignore(); // Очищаем буфер ввода перед вызовом getline
+
+        switch (choice) {
+        case 1: {
+            Employee emp;
+            cout << "Введите фамилию сотрудника: ";
+            getline(cin, emp.surname);
+            cout << "Введите табельный номер сотрудника: ";
+            cin >> emp.employeeID;
+            cout << "Введите количество отработанных часов: ";
+            cin >> emp.hoursWorked;
+            cout << "Введите почасовой тариф: ";
+            cin >> emp.hourlyRate;
+            cin.ignore(); // Очищаем буфер ввода перед вызовом getline
+            insert(root, emp);
+            break;
+        }
+        case 2: {
+            int searchID;
+            cout << "Введите табельный номер сотрудника для поиска: ";
+            cin >> searchID;
+            Employee* foundEmployee = search(root, searchID);
+            printEmployeeInfo(foundEmployee);
+            break;
+        }
+        case 3: {
+            int deleteID;
+            cout << "Введите табельный номер сотрудника для удаления: ";
+            cin >> deleteID;
+            root = deleteEmployee(root, deleteID);
+            break;
+        }
+        case 4: {
+            int searchID;
+            cout << "Введите табельный номер сотрудника для вывода информации: ";
+            cin >> searchID;
+            Employee* foundEmployee = search(root, searchID);
+            printEmployeeInfo(foundEmployee);
+            break;
+        }
+        case 5: {
+            ofstream outFile("employees.txt");
+            if (!outFile) {
+                cerr << "Ошибка открытия файла." << endl;
+                return 1;
+            }
+            writeToFile(root, outFile);
+            outFile.close();
+            cout << "Информация о сотрудниках успешно записана в файл." << endl;
+            break;
+        }
+        case 6: {
+            running = false;
+            cout << "Выход из программы." << endl;
+            break;
+        }
+        default:
+            cout << "Некорректный выбор. Попробуйте снова." << endl;
+        }
+    }
+    return 0;
+}
