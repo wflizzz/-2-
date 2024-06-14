@@ -1,0 +1,162 @@
+main.cpp
+#include <iostream>
+#include "Stack.h"
+using namespace std;
+int main() {
+    Stack myStack;
+    int choice;
+    std::string name, legalStatus, director;
+    int numEmployees;
+
+    for (;;) {
+        cout << "\nMenu:\n";
+        cout << "1. Push\n";
+        cout << "2. Pop\n";
+        cout << "3. Show\n";
+        cout << "4. Clear\n";
+        cout << "5. Save to file\n";
+        cout << "6. Load from file\n";
+        cout << "7. Exit\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            cout << "Enter name: ";
+            cin >> name;
+            cout << "Enter legal status: ";
+            cin >> legalStatus;
+            cout << "Enter director: ";
+            cin >> director;
+            cout << "Enter number of employees: ";
+            cin >> numEmployees;
+            myStack.push(name, legalStatus, director, numEmployees);
+            break;
+        case 2:
+            myStack.pop();
+            break;
+        case 3:
+            myStack.show();
+            break;
+        case 4:
+            myStack.clear();
+            break;
+        case 5:
+            myStack.toFile("stack_data.txt");
+            break;
+        case 6:
+            myStack.fromFile("stack_data.txt");
+            break;
+        case 7:
+            return 0;
+        default:
+            cout << "Invalid choice\n";
+        }
+    }
+
+    return 0;
+}
+
+Stack.cpp
+#include "Stack.h"
+#include <fstream>
+#include <iostream>
+using namespace std;
+Stack::Stack() : top(nullptr) {}
+
+Stack::~Stack() {
+    clear();
+}
+
+void Stack::push(const string& name, const string& legalStatus, const string& director, int numEmployees) {
+    StackNode* newNode = new StackNode;
+    newNode->name = name;
+    newNode->legalStatus = legalStatus;
+    newNode->director = director;
+    newNode->numEmployees = numEmployees;
+    newNode->next = top;
+    top = newNode;
+}
+
+void Stack::pop() {
+    if (top == nullptr) {
+        cout << "Stack is empty.\n";
+        return;
+    }
+    StackNode* temp = top;
+    top = top->next;
+    delete temp;
+}
+
+void Stack::show() {
+    StackNode* current = top;
+    while (current != nullptr) {
+        cout << "Name: " << current->name << ", Legal Status: " << current->legalStatus << ", Director: " << current->director << ", Number of Employees: " << current->numEmployees << std::endl;
+        current = current->next;
+    }
+}
+
+void Stack::clear() {
+    while (top != nullptr) {
+        pop();
+    }
+}
+
+void Stack::toFile(const string& filename) {
+    ofstream outFile(filename);
+    if (!outFile) {
+        cerr << "Failed to open file for writing.\n";
+        return;
+    }
+    StackNode* current = top;
+    while (current != nullptr) {
+        outFile << current->name << " " << current->legalStatus << " " << current->director << " " << current->numEmployees << std::endl;
+        current = current->next;
+    }
+    outFile.close();
+}
+
+void Stack::fromFile(const string& filename) {
+    ifstream inFile(filename);
+    if (!inFile) {
+        cerr << "Failed to open file for reading.\n";
+        return;
+    }
+    clear(); // Clear the current stack before reading from file
+    string name, legalStatus, director;
+    int numEmployees;
+    while (inFile >> name >> legalStatus >> director >> numEmployees) {
+        push(name, legalStatus, director, numEmployees);
+    }
+    inFile.close();
+}
+
+Stack.h
+#pragma once
+#ifndef MYSTACK_H
+#define MYSTACK_H
+using namespace std;
+struct StackNode {
+    string name;
+    string legalStatus;
+    string director;
+    int numEmployees;
+    StackNode* next;
+};
+
+class Stack {
+private:
+    StackNode* top;
+
+public:
+    Stack(); // Конструктор
+    ~Stack(); // Деструктор
+    void push(const string& name, const string& legalStatus, const string& director, int numEmployees);
+    void pop();
+    void show();
+    void clear();
+    void toFile(const string& filename);
+    void fromFile(const string& filename);
+};
+
+#endif
