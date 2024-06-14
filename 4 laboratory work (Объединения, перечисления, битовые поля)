@@ -1,0 +1,165 @@
+#include <iostream>
+#include <string>
+
+using namespace std;
+
+enum Days { MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY };
+
+struct Train {
+    int trainNumber;
+    string destination;
+    Days daysOfOperation;
+    int arrivalHours;
+    int arrivalMinutes;
+    int departureHours;
+    int departureMinutes;
+};
+
+void inputTrainData(Train& train) {
+    cout << "Введите номер поезда: ";
+    cin >> train.trainNumber;
+    cout << "Введите пункт назначения: ";
+    cin.ignore();
+    getline(cin, train.destination);
+    cout << "Выберите день следования (0 - ПН, 1 - ВТ, ..., 6 - ВС): ";
+    int day;
+    cin >> day;
+    train.daysOfOperation = static_cast<Days>(day);
+    cout << "Введите время прибытия (часы минуты): ";
+    cin >> train.arrivalHours >> train.arrivalMinutes;
+    cout << "Введите время отправления (часы минуты): ";
+    cin >> train.departureHours >> train.departureMinutes;
+}
+
+void displayTrainData(const Train& train) {
+    cout << "Номер поезда: " << train.trainNumber << endl;
+    cout << "Пункт назначения: " << train.destination << endl;
+    cout << "Дни следования: ";
+    switch (train.daysOfOperation) {
+    case MONDAY:
+        cout << "Понедельник";
+        break;
+    case TUESDAY:
+        cout << "Вторник";
+        break;
+    case WEDNESDAY:
+        cout << "Среда";
+        break;
+    case THURSDAY:
+        cout << "Четверг";
+        break;
+    case FRIDAY:
+        cout << "Пятница";
+        break;
+    case SATURDAY:
+        cout << "Суббота";
+        break;
+    case SUNDAY:
+        cout << "Воскресенье";
+        break;
+    }
+    cout << endl;
+    cout << "Время прибытия: " << train.arrivalHours << ":" << train.arrivalMinutes << endl;
+    cout << "Время отправления: " << train.departureHours << ":" << train.departureMinutes << endl;
+}
+
+void searchTrainByDestination(const Train trains[], int numTrains) {
+    string searchDestination;
+    cout << "Введите пункт назначения для поиска: ";
+    cin.ignore();
+    getline(cin, searchDestination);
+
+    bool found = false;
+    for (int i = 0; i < numTrains; i++) {
+        if (trains[i].destination == searchDestination) {
+            displayTrainData(trains[i]);
+            found = true;
+        }
+    }
+
+    if (!found) {
+        cout << "Поезда с указанным пунктом назначения не найдены." << endl;
+    }
+}
+
+void deleteTrainByNumber(Train trains[], int& numTrains, int trainNumber) {
+    for (int i = 0; i < numTrains; i++) {
+        if (trains[i].trainNumber == trainNumber) {
+            for (int j = i; j < numTrains - 1; j++) {
+                trains[j] = trains[j + 1];
+            }
+            numTrains--;
+            cout << "Поезд с номером " << trainNumber << " удален." << endl;
+            return;
+        }
+    }
+
+    cout << "Поезд с номером " << trainNumber << " не найден." << endl;
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian");
+    const int MAX_TRAINS = 100;
+    Train trains[MAX_TRAINS];
+    int numTrains = 0;
+
+    int choice;
+    do {
+        cout << "\nМеню:" << endl;
+        cout << "1. Добавить данные о поезде" << endl;
+        cout << "2. Вывести данные о поезде" << endl;
+        cout << "3. Поиск по пункту назначения" << endl;
+        cout << "4. Удалить поезд по номеру" << endl;
+        cout << "0. Выход" << endl;
+
+        cout << "\nВыберите действие: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            if (numTrains < MAX_TRAINS) {
+                inputTrainData(trains[numTrains]);
+                numTrains++;
+            }
+            else {
+                cout << "Достигнуто максимальное количество поездов." << endl;
+            }
+            break;
+        case 2:
+            if (numTrains > 0) {
+                displayTrainData(trains[numTrains - 1]);
+            }
+            else {
+                cout << "Нет данных о поездах." << endl;
+            }
+            break;
+        case 3:
+            if (numTrains > 0) {
+                searchTrainByDestination(trains, numTrains);
+            }
+            else {
+                cout << "Нет данных о поездах." << endl;
+            }
+            break;
+        case 4:
+            if (numTrains > 0) {
+                int trainNumberToDelete;
+                cout << "Введите номер поезда для удаления: ";
+                cin >> trainNumberToDelete;
+                deleteTrainByNumber(trains, numTrains, trainNumberToDelete);
+            }
+            else {
+                cout << "Нет данных о поездах." << endl;
+            }
+            break;
+        case 0:
+            cout << "Выход из программы." << endl;
+            break;
+        default:
+            cout << "Некорректный выбор. Попробуйте снова." << endl;
+            break;
+        }
+    } while (choice != 0);
+
+    return 0;
+}
