@@ -1,0 +1,113 @@
+#include <iostream>    
+#include <string>      
+#include <cmath>      
+using namespace std;   
+
+// Структура для хранения информации о сотруднике
+struct Employee {
+    string fullName;   // ФИО сотрудника
+    int departmentID;  // Номер отдела
+    string position;   // Должность
+    string startDate;  // Дата начала работы
+
+    Employee() {} // Конструктор по умолчанию
+    Employee(string name, int depID, string pos, string date) : fullName(name), departmentID(depID), position(pos), startDate(date) {} // Конструктор с параметрами
+};
+
+// Хеш-таблица с открытой адресацией
+class HashTable {
+private:
+    static const int tableSize = 10; // Размер таблицы
+    Employee* table[tableSize];       // Массив указателей на сотрудников
+
+    // Хеш-функция (мультипликативная)
+    int hashFunction(int key) {
+        const double A = (sqrt(5) - 1) / 2; // Константа для мультипликативной хеш-функции
+        return floor(tableSize * fmod(key * A, 1)); // Вычисляем хеш по формуле h(k) = floor(m * ((k * A) mod 1))
+    }
+
+public:
+    HashTable() {
+        for (int i = 0; i < tableSize; i++) {
+            table[i] = nullptr; // Инициализация всех указателей как nullptr
+        }
+    }
+
+    // Функция для добавления сотрудника в хеш-таблицу
+    void insert(int key, const Employee& emp) {
+        int index = hashFunction(key); // Получаем индекс в таблице по ключу
+        while (table[index] != nullptr) { // Пока не найдено свободное место
+            index = (index + 1) % tableSize; // Пробуем следующую ячейку (линейное пробирование)
+        }
+        table[index] = new Employee(emp); // Добавляем сотрудника в найденную ячейку
+    }
+
+    // Функция для поиска сотрудника по ключу в хеш-таблице
+    Employee* search(int key) {
+        int index = hashFunction(key); // Получаем индекс в таблице по ключу
+        while (table[index] != nullptr) { // Пока не найден пустой слот
+            if (table[index]->departmentID == key) { // Если ключ найден
+                return table[index]; // Возвращаем указатель на сотрудника
+            }
+            index = (index + 1) % tableSize; // Пробуем следующую ячейку
+        }
+        return nullptr; // Если не найдено, возвращаем nullptr
+    }
+};
+
+// Функция для вычисления стажа работы сотрудника (в годах)
+int calculateExperience(const string& startDate) {
+    // Предполагается, что startDate имеет формат "DD.MM.YYYY"
+    int startYear = stoi(startDate.substr(6, 4)); // Получаем год начала работы
+    int currentYear = 2024; // Текущий год (можно получить автоматически)
+    return currentYear - startYear; // Вычисляем стаж работы
+}
+
+int main() {
+    setlocale(LC_ALL, "Ru");
+    HashTable ht; // Создаем объект хеш-таблицы
+    int numEmployees;
+    cout << "Введите количество сотрудников: ";
+    cin >> numEmployees;
+
+    for (int i = 0; i < numEmployees; i++) {
+        string name, pos, date;
+        int depID;
+        cout << "\nВведите ФИО сотрудника: ";
+        cin.ignore();
+        getline(cin, name);
+        cout << "Введите номер отдела: ";
+        cin >> depID;
+        cout << "Введите должность: ";
+        cin.ignore();
+        getline(cin, pos);
+        cout << "Введите дату начала работы (формат DD.MM.YYYY): ";
+        cin >> date;
+
+        Employee emp(name, depID, pos, date); // Создаем объект сотрудника
+
+        ht.insert(depID, emp); // Добавляем сотрудника в хеш-таблицу по номеру отдела
+    }
+
+    int searchKey;
+    cout << "\nВведите номер отдела для поиска сотрудника: ";
+    cin >> searchKey;
+
+    Employee* foundEmployee = ht.search(searchKey); // Ищем сотрудника по номеру отдела
+
+    if (foundEmployee != nullptr) {
+        cout << "\nИнформация о найденном сотруднике:" << endl;
+        cout << "ФИО: " << foundEmployee->fullName << endl;
+        cout << "Номер отдела: " << foundEmployee->departmentID << endl;
+        cout << "Должность: " << foundEmployee->position << endl;
+        cout << "Дата начала работы: " << foundEmployee->startDate << endl;
+
+        int experience = calculateExperience(foundEmployee->startDate);
+        cout << "Стаж работы: " << experience << " лет" << endl;
+    }
+    else {
+        cout << "\nСотрудник не найден." << endl;
+    }
+
+    return 0;
+}
