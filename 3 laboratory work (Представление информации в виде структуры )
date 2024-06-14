@@ -1,0 +1,181 @@
+#include <iostream>
+#include <fstream>
+#include <string>
+
+using namespace std;
+
+const int MAX_STUDENTS = 100; // Максимальное количество студентов
+
+struct Student {
+    string fullName;
+    string admissionDate;
+    string specialty;
+    string group;
+    string faculty;
+    double averageGrade;
+};
+
+// Функция для ввода информации о студенте с клавиатуры
+void inputStudent(Student students[], int& numStudents) {
+    if (numStudents < MAX_STUDENTS) {
+        cout << "Введите ФИО студента: ";
+        getline(cin >> ws, students[numStudents].fullName);
+        cout << "Введите дату поступления студента: ";
+        getline(cin >> ws, students[numStudents].admissionDate);
+        cout << "Введите специальность студента: ";
+        getline(cin >> ws, students[numStudents].specialty);
+        cout << "Введите группу студента: ";
+        getline(cin >> ws, students[numStudents].group);
+        cout << "Введите факультет студента: ";
+        getline(cin >> ws, students[numStudents].faculty);
+        cout << "Введите средний балл студента: ";
+        cin >> students[numStudents].averageGrade;
+        numStudents++;
+    }
+    else {
+        cout << "Достигнуто максимальное количество студентов." << endl;
+    }
+}
+
+// Функция для вывода информации о студенте
+void outputStudent(const Student& student) {
+    cout << "ФИО: " << student.fullName << endl;
+    cout << "Дата поступления: " << student.admissionDate << endl;
+    cout << "Специальность: " << student.specialty << endl;
+    cout << "Группа: " << student.group << endl;
+    cout << "Факультет: " << student.faculty << endl;
+    cout << "Средний балл: " << student.averageGrade << endl;
+}
+
+// Функция для удаления студента из списка
+void deleteStudent(Student students[], int& numStudents, const string& fullNameToDelete) {
+    for (int i = 0; i < numStudents; ++i) {
+        if (students[i].fullName == fullNameToDelete) {
+            for (int j = i; j < numStudents - 1; ++j) {
+                students[j] = students[j + 1];
+            }
+            numStudents--;
+            cout << "Студент успешно удален." << endl;
+            return;
+        }
+    }
+    cout << "Студент с указанным именем не найден." << endl;
+}
+
+// Функция для поиска студента по фамилии
+void searchStudent(const Student students[], int numStudents, const string& fullNameToFind) {
+    for (int i = 0; i < numStudents; ++i) {
+        if (students[i].fullName == fullNameToFind) {
+            cout << "Студент найден:" << endl;
+            outputStudent(students[i]);
+            return;
+        }
+    }
+    cout << "Студент с указанным именем не найден." << endl;
+}
+
+// Функция для записи данных о студентах в файл
+void writeToFile(const Student students[], int numStudents, const string& filename) {
+    ofstream file(filename);
+    if (file.is_open()) {
+        for (int i = 0; i < numStudents; ++i) {
+            file << students[i].fullName << endl;
+            file << students[i].admissionDate << endl;
+            file << students[i].specialty << endl;
+            file << students[i].group << endl;
+            file << students[i].faculty << endl;
+            file << students[i].averageGrade << endl;
+        }
+        cout << "Данные успешно записаны в файл." << endl;
+    }
+    else {
+        cout << "Ошибка открытия файла для записи." << endl;
+    }
+}
+
+// Функция для чтения данных о студентах из файла
+void readFromFile(Student students[], int& numStudents, const string& filename) {
+    ifstream file(filename);
+    if (file.is_open()) {
+        numStudents = 0; // Сбрасываем количество студентов
+        while (getline(file >> ws, students[numStudents].fullName)) {
+            getline(file >> ws, students[numStudents].admissionDate);
+            getline(file >> ws, students[numStudents].specialty);
+            getline(file >> ws, students[numStudents].group);
+            getline(file >> ws, students[numStudents].faculty);
+            file >> students[numStudents].averageGrade;
+            numStudents++;
+        }
+        cout << "Данные успешно загружены из файла." << endl;
+    }
+    else {
+        cout << "Ошибка открытия файла для чтения." << endl;
+    }
+}
+
+int main() {
+    setlocale(LC_ALL, "Ru");
+    Student students[MAX_STUDENTS];
+    int numStudents = 0;
+    string filename = "students.txt";
+
+    int choice;
+    string fullName;
+
+    do {
+        cout << "\nМеню:\n";
+        cout << "1. Ввод информации о студенте\n";
+        cout << "2. Вывод информации о студентах\n";
+        cout << "3. Удаление студента\n";
+        cout << "4. Поиск студента\n";
+        cout << "5. Запись информации в файл\n";
+        cout << "6. Чтение информации из файла\n";
+        cout << "0. Выход\n";
+        cout << "Выберите действие: ";
+        cin >> choice;
+
+        switch (choice) {
+        case 1:
+            cin.ignore(); // Очищаем буфер ввода перед getline
+            inputStudent(students, numStudents);
+            break;
+        case 2:
+            if (numStudents == 0) {
+                cout << "Список студентов пуст." << endl;
+            }
+            else {
+                cout << "Информация о студентах:" << endl;
+                for (int i = 0; i < numStudents; ++i) {
+                    outputStudent(students[i]);
+                    cout << endl;
+                }
+            }
+            break;
+        case 3:
+            cout << "Введите ФИО студента для удаления: ";
+            cin.ignore(); // Очищаем буфер ввода перед getline
+            getline(cin, fullName);
+            deleteStudent(students, numStudents, fullName);
+            break;
+        case 4:
+            cout << "Введите ФИО студента для поиска: ";
+            cin.ignore(); // Очищаем буфер ввода перед getline
+            getline(cin, fullName);
+            searchStudent(students, numStudents, fullName);
+            break;
+        case 5:
+            writeToFile(students, numStudents, filename);
+            break;
+        case 6:
+            readFromFile(students, numStudents, filename);
+            break;
+        case 0:
+            cout << "Выход из программы." << endl;
+            break;
+        default:
+            cout << "Некорректный ввод." << endl;
+        }
+    } while (choice != 0);
+
+    return 0;
+}
