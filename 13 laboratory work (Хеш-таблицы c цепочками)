@@ -1,0 +1,267 @@
+Main.cpp:
+#include "Hash_Chain.h"
+#include <iostream>
+using namespace std;
+
+// Структура для хранения информации о паспорте клиента
+struct PassportInfo {
+    int passportNumber;
+    string clientName;
+
+    PassportInfo(int passport, string name) : passportNumber(passport), clientName(name) {}
+};
+
+// Хеш-функция для вычисления хеш-кода на основе номера паспорта
+int hf(void* d) {
+    PassportInfo* passportInfo = (PassportInfo*)d;
+    return passportInfo->passportNumber;
+}
+
+// Функция для вывода информации о паспорте и клиенте
+void printPassportInfo(listx::Element* e) {
+    PassportInfo* passportInfo = (PassportInfo*)e->data;
+    cout << "Номер паспорта: " << passportInfo->passportNumber << ", Имя клиента: " << passportInfo->clientName << endl;
+}
+
+int main() {
+    setlocale(LC_ALL, "rus");
+    int current_size = 7;
+    cout << "Введите размер хеш-таблицы" << endl;
+    cin >> current_size;
+
+    // Создание хеш-таблицы
+    hashTC::Object H = hashTC::create(current_size, hf);
+
+    int choice;
+    int passportNumber;
+    string clientName;
+
+    for (;;) {
+        cout << "1 - вывод хеш-таблицы" << endl;
+        cout << "2 - добавление элемента" << endl;
+        cout << "3 - удаление элемента" << endl;
+        cout << "4 - поиск элемента" << endl;
+        cout << "0 - выход" << endl;
+        cout << "сделайте выбор" << endl;
+        cin >> choice;
+
+        switch (choice) {
+        case 0:
+            exit(0);
+        case 2: {
+            // Добавление элемента (паспортной информации)
+            cout << "Введите номер паспорта: ";
+            cin >> passportNumber;
+            cout << "Введите имя клиента: ";
+            cin >> clientName;
+            PassportInfo* passportInfo = new PassportInfo(passportNumber, clientName);
+            H.insert(passportInfo);
+            break;
+        }
+        case 1:
+            // Вывод хеш-таблицы
+            H.Scan();
+            break;
+        case 3: {
+            // Удаление элемента по номеру паспорта
+            cout << "Введите номер паспорта для удаления: ";
+            cin >> passportNumber;
+            PassportInfo passportInfoToDelete(passportNumber, "");
+            H.deleteByData(&passportInfoToDelete);
+            break;
+        }
+        case 4: {
+            // Поиск элемента по номеру паспорта
+            cout << "Введите номер паспорта для поиска: ";
+            cin >> passportNumber;
+            PassportInfo passportInfoToSearch(passportNumber, "");
+            listx::Element* foundElement = H.search(&passportInfoToSearch);
+            if (foundElement == NULL)
+                cout << "Паспорт не найден" << endl;
+            else {
+                cout << "Найденный элемент: ";
+                printPassportInfo(foundElement);
+            }
+            break;
+        }
+        }
+    }
+    return 0;
+}
+
+List.cpp:
+#include "Lists.h" 
+#include <iostream> 
+#include <string> // Добавляем библиотеку <string>
+
+struct AAA        // Описание структуры AAA для элементов таблицы
+{
+	int key;      // Целочисленное поле key
+	char* mas;    // Указатель на символьный массив
+};
+
+namespace listx // Открытие пространства имён listx
+{
+	bool Object::insert(void* data) // Определение метода insert для вставки элемента в список
+	{
+		bool rc = NULL; // Инициализация переменной rc значением NULL
+		if (head == NULL) // Если список пуст
+			head = new Element(NULL, data, head); // Создаем новый элемент и делаем его головой списка
+		else
+			head = (head->prev = new Element(NULL, data, head)); // Добавляем новый элемент в начало списка
+		return rc; // Возвращаем rc
+	}
+	//-------------------------------
+	Element* Object::search(void* data) // Определение метода search для поиска элемента в списке
+	{
+		Element* rc = head; // Инициализация указателя rc значением головы списка
+		while ((rc != NULL) && ((((AAA*)rc->data)->key) != ((AAA*)data)->key)) // Пока rc не равен NULL и ключ текущего элемента не равен ключу искомого элемента
+			rc = rc->next; // Переходим к следующему элементу списка
+		return rc; // Возвращаем указатель на найденный элемент или NULL, если элемент не найден
+	}
+	//-------------------------------
+	bool Object::deleteByElement(Element* e) // Определение метода deleteByElement для удаления элемента из списка по указателю
+	{
+		bool rc = NULL; // Инициализация переменной rc значением NULL
+		if (rc = (e != NULL)) // Если указатель e не равен NULL
+		{
+			if (e->next != NULL) // Если следующий элемент после e не равен NULL
+				e->next->prev = e->prev; // Устанавливаем указатель prev следующего элемента на предыдущий элемент e
+			if (e->prev != NULL) // Если предыдущий элемент перед e не равен NULL
+				e->prev->next = e->next; // Устанавливаем указатель next предыдущего элемента на следующий элемент e
+			else
+				head = e->next; // Иначе, если e был первым элементом списка, делаем следующий за e элемент новой головой списка
+			delete e; // Удаляем элемент e
+		}
+		std::cout << "Элемент удален" << std::endl; // Выводим сообщение об удалении элемента
+		return rc; // Возвращаем rc
+	}
+	//-------------------------------
+	bool Object::deleteByData(void* data) // Определение метода deleteByData для удаления элемента из списка по данным
+	{
+		return deleteByElement(search(data));
+	} // Удаляем элемент, найденный по данным
+//-------------------------------
+	Element* Object::getLast() // Определение метода getLast для получения указателя на последний элемент списка
+	{
+		listx::Element* e = this->getFirst(), * rc = this->getFirst(); // Инициализация указателей e и rc значением первого элемента списка
+		while (e != NULL) // Пока e не равен NULL
+		{
+			rc = e; // Присваиваем rc значение e
+			e = e->getNext(); // Переходим к следующему элементу списка
+		};
+		return rc; // Возвращаем указатель на последний элемент списка
+	}
+	//-------------------------------
+	Object create() // Определение функции create для создания объекта списка
+	{
+		return *(new Object());
+	}; // Создание и возвращение нового объекта списка
+	//-------------------------------
+	void Object::scan()
+	{
+		listx::Element* e = this->getFirst();
+		while (e != NULL)
+		{
+			std::cout << ((AAA*)e->data)->key << '-' << ((AAA*)e->data)->mas << " / ";
+			e = e->getNext();
+		};
+	}
+}
+
+Hash_Table.cpp:
+#include "Hash_Chain.h" 
+#include <iostream>     
+
+namespace hashTC
+{
+	Object create(int size, int(*f)(void*)) // Определение функции create для создания объекта хеш-таблицы
+	{
+		return *(new Object(size, f));
+	}     // Создание и возвращение нового объекта хеш-таблицы
+
+	int Object::hashFunction(void* data) // Определение метода hashFunction для вычисления хеша
+	{
+		return (FunKey(data) % size);
+	}; // Возврат остатка от деления ключа на размер таблицы
+
+	bool Object::insert(void* data) // Определение метода insert для вставки данных в хеш-таблицу
+	{
+		return (Hash[hashFunction(data)].insert(data));
+	}; // Вставка данных в соответствующий список хеш-таблицы
+
+	bool Object::deleteByData(void* data) // Определение метода deleteByData для удаления данных из хеш-таблицы
+	{
+		return (Hash[hashFunction(data)].deleteByData(data));
+	}; // Удаление данных из соответствующего списка хеш-таблицы
+
+	listx::Element* Object::search(void* data) // Определение метода search для поиска данных в хеш-таблице
+	{
+		return Hash[hashFunction(data)].search(data);
+	}; // Поиск данных в соответствующем списке хеш-таблицы и возврат указателя на элемент
+
+	void Object::Scan() // Определение метода Scan для сканирования хеш-таблицы
+	{
+		for (int i = 0; i < size; i++) // Цикл по всем спискам в хеш-таблице
+		{
+			Hash[i].scan();   // Вызов метода scan для сканирования текущего списка
+			std::cout << '\n'; // Вывод символа новой строки
+		}
+	};
+}
+
+Lists.h:
+#pragma once              //Заголовочный файл Lists.h
+#define LISTNIL (Element*)-1
+namespace listx
+{
+    struct Element
+    {
+        Element* prev;
+        Element* next;
+        void* data;
+        Element(Element* pr, void* dat, Element* nt) : prev(pr), data(dat), next(nt) {}
+        Element* getNext() { return next; };
+        Element* getPrev() { return prev; };
+    };
+    static Element* NIL = nullptr;
+    struct Object
+    {
+        Element* head;
+        Object() : head(NIL) {}
+        Element* getFirst() { return head; };
+        Element* getLast();
+        Element* search(void* data);
+        bool insert(void* data);
+        bool deleteByElement(Element* e);
+        bool deleteByData(void* data);
+        void scan();
+    };
+    Object create();
+}
+#undef LISTNIL 
+
+Hash_Chain.h:
+#pragma once            //Заголовочный файл Hash_Chain.h
+#include "Lists.h"
+#include <string> // Добавляем библиотеку <string>
+
+namespace hashTC
+{
+    struct Object
+    {
+        int size;
+        int (*FunKey)(void*);
+        listx::Object* Hash;
+        Object(int siz, int (*f)(void*)) : size(siz), FunKey(f)
+        {
+            Hash = new listx::Object[size];
+        };
+        int hashFunction(void* data);
+        bool insert(void* data);
+        listx::Element* search(void* data);
+        bool deleteByData(void* data);
+        void Scan();
+    };
+    Object create(int size, int (*f)(void*));
+}
