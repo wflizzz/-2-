@@ -1,0 +1,30 @@
+#include <iostream>
+#include <stdio.h>
+using namespace std;
+int main() {
+    setlocale(LC_CTYPE, "Russian");
+    FILE* inFile = fopen("fileA.txt", "r");
+    FILE* outFile = fopen("fileB.txt", "w"); 
+
+    if (!inFile || !outFile) {
+        cout << "Не удалось открыть файлы." << endl;
+        return 1; // Возврат ошибки, если файлы не открываются
+    }
+
+    int number;
+    int count = 0; // Счетчик для отслеживания номера числа
+
+    while (fscanf(inFile, "%d", &number) != EOF) { // Пока из файла удается считать число
+        ++count; // Увеличиваем счетчик на 1
+        if (count % 2 == 0) { // Если число четное по порядку
+            fprintf(outFile, "%d\n", number); // Записываем его в файл
+        }
+    }
+
+    fclose(inFile); // Закрываем файлы после использования
+    fclose(outFile);
+
+    cout << "Задача выполнена. Файл 'fileB.txt' создан." << endl;
+
+    return 0;
+}
